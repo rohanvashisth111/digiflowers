@@ -616,12 +616,67 @@ function goResult(){
 }
 
 function copyLink(){
-  const url = `https://digiflowers.app/b/${resultShareCode}`;
-  navigator.clipboard?.writeText(url).catch(()=>{});
+  const stems = expandedStems();
+  const stemsStr = stems.join(',');
+  
+  const toVal = document.getElementById('toName').value.trim();
+  const noteVal = document.getElementById('noteText').value.trim();
+  
+  const params = new URLSearchParams();
+  if (toVal) params.set('to', toVal);
+  if (noteVal) params.set('note', noteVal);
+  if (stemsStr) params.set('stems', stemsStr);
+  params.set('seed', arrangeSeed);
+  params.set('green', greeneryStyle);
+  params.set('mode', mode);
+
+  // Always point at the site root, not the current document path.
+  // On Vercel, "/index.html" and "/" can resolve differently (clean-URL
+  // redirects, trailing slash rules, etc.), so basing the share link on
+  // window.location.pathname can produce a link that 404s for recipients
+  // even though it looked fine to the person who copied it.
+  let dir = window.location.pathname.replace(/[^/]*$/, '');
+  if (!dir) dir = '/';
+  const baseUrl = window.location.origin + dir;
+  const shareUrl = `${baseUrl}?${params.toString()}`;
+
   const btn = document.getElementById('copyLinkBtn');
   const old = btn.textContent;
-  btn.textContent = 'Copied!';
-  setTimeout(()=>btn.textContent = old, 1400);
+
+  function showCopied(){
+    btn.textContent = 'Copied!';
+    setTimeout(()=>btn.textContent = old, 1400);
+  }
+
+  function fallbackCopy(){
+    // Older/blocked browsers: try a hidden textarea + execCommand.
+    let ok = false;
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch (e) { ok = false; }
+
+    if (ok) {
+      showCopied();
+    } else {
+      // Last resort: never silently pretend it worked. Show the link
+      // itself so the person can copy it by hand.
+      window.prompt('Copy this link:', shareUrl);
+    }
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shareUrl).then(showCopied).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
 }
 
 function resetAll(){
@@ -629,6 +684,9 @@ function resetAll(){
   order = [];
   document.getElementById('toName').value = '';
   document.getElementById('noteText').value = '';
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
   showScreen('home');
 }
 
@@ -641,3 +699,54 @@ if (homeFlowerEl) {
   const homeRose = FLOWERS.find(f => f.id === 'rose-pink') || FLOWERS[0];
   homeFlowerEl.innerHTML = `<svg viewBox="0 0 120 120" style="width:80px; height:80px; margin:0 auto 10px; display:block;">${flowerSVG(homeRose, false)}</svg>`;
 }
+
+// Check if loading a shared bouquet from URL query parameters on load
+function checkSharedBouquet() {
+  const params = new URLSearchParams(window.location.search);
+  const stemsParam = params.get('stems');
+  if (stemsParam) {
+    const stemsList = stemsParam.split(',');
+    qty = {};
+    order = [];
+    stemsList.forEach(id => {
+      const cleanId = id.trim();
+      if (cleanId) {
+        if (!qty[cleanId]) {
+          qty[cleanId] = 0;
+          order.push(cleanId);
+        }
+        qty[cleanId]++;
+      }
+    });
+
+    const seedParam = params.get('seed');
+    if (seedParam) {
+      arrangeSeed = parseInt(seedParam, 10) || 1;
+    }
+
+    const greenParam = params.get('green');
+    if (greenParam) {
+      greeneryStyle = parseInt(greenParam, 10) || 0;
+    }
+
+    const modeParam = params.get('mode');
+    if (modeParam && (modeParam === 'color' || modeParam === 'mono')) {
+      mode = modeParam;
+      setMode(mode);
+    }
+
+    const toParam = params.get('to');
+    if (toParam) {
+      document.getElementById('toName').value = toParam;
+    }
+
+    const noteParam = params.get('note');
+    if (noteParam) {
+      document.getElementById('noteText').value = noteParam;
+    }
+
+    goResult();
+  }
+}
+
+checkSharedBouquet();
