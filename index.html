@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DigiFlowers — send a digital bouquet</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ HOME ============ -->
+  <section id="home" class="screen active">
+    <!-- floating background petals on home -->
+    <div class="home-petal"></div>
+    <div class="home-petal"></div>
+    <div class="home-petal"></div>
+    <div class="home-inner">
+      <div class="home-flower" id="homeFlower"></div>
+      <h1 class="home-logo-title">DigiFlowers</h1>
+      <p class="home-sub-title">— Curated Blooms, Delivered Digitally —</p>
+      <div class="home-actions">
+        <button class="btn-primary-home" onclick="startBuild('color')">Build a Bouquet</button>
+        <button class="btn-ghost-home" onclick="startBuild('mono')">Build it in Monochrome</button>
+        <button class="btn-link-home" onclick="startBuild('color')">View the Garden</button>
+      </div>
+      <div>
+        <a class="vercel-badge" href="https://vercel.com" target="_blank" rel="noopener">
+          Powered by ▲ Vercel
+        </a>
+      </div>
+      <div class="home-author">
+        Made by <a href="https://www.instagram.com/__rohanvashisth/" target="_blank" rel="noopener">@__rohanvashisth</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PICKER ============ -->
+  <section id="picker" class="screen">
+    <div class="topbar">
+      <div class="brand-mini">Digi<span style="color:var(--poppy)">Flowers</span></div>
+      <div class="mode-toggle">
+        <button id="modeColorBtn" onclick="setMode('color')">color</button>
+        <button id="modeMonoBtn" onclick="setMode('mono')">mono</button>
+      </div>
+    </div>
+
+    <div class="picker-head">
+      <h1>PICK 6 TO 10 BLOOMS</h1>
+      <p class="picker-sub">Tap a flower to add it — use the + / − to add more of the same kind</p>
+    </div>
+
+    <div class="bloom-grid" id="bloomGrid"></div>
+
+    <div class="picker-dock">
+      <div class="dock-inner">
+        <div class="dock-tally"><strong id="dockCount">0</strong>/10 picked</div>
+        <button class="dock-next" id="nextBtn" disabled onclick="goArrange()">
+          Arrange bouquet
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ARRANGE ============ -->
+  <section id="arrange" class="screen">
+    <div class="arrange-head">
+      <h1>tie it together</h1>
+      <p>Your bouquet, wrapped. Add who it's for and a few words.</p>
+    </div>
+
+    <div class="arrange-controls">
+      <button class="btn-small" onclick="shuffleArrangement()">↻ Try a new arrangement</button>
+      <button class="btn-small" onclick="shuffleGreenery()">🌿 Change greenery</button>
+    </div>
+
+    <div class="wrap-stage">
+      <svg class="bouquet-svg" id="bouquetSvg" viewBox="0 0 400 440" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+    </div>
+
+    <div class="tag-row">
+      <div class="tag-field">
+        <label for="toName">For</label>
+        <input id="toName" type="text" placeholder="Their name" maxlength="40">
+      </div>
+      <div class="tag-field">
+        <label for="noteText">A note to tuck in</label>
+        <textarea id="noteText" placeholder="Thinking of you..." maxlength="160"></textarea>
+      </div>
+    </div>
+
+    <div class="arrange-actions">
+      <a class="btn-ghost" href="javascript:void(0)" onclick="goBack('picker')">Rearrange blooms</a>
+      <button class="btn-primary" onclick="goResult()">Wrap &amp; get link</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section id="result" class="screen">
+    <!-- floating background petals -->
+    <div class="result-petal"></div>
+    <div class="result-petal"></div>
+    <div class="result-petal"></div>
+    <div class="result-petal"></div>
+
+    <div class="result-wrap">
+      <div class="result-logo-wrap">
+        <span class="result-divider"></span>
+        <div class="result-logo">Digi<span style="color:var(--poppy)">Flowers</span></div>
+        <span class="result-divider"></span>
+      </div>
+      <p class="result-greeting" id="resultGreeting">A bouquet, just for you</p>
+
+      <div class="result-stage">
+        <svg class="result-svg" id="resultSvg" viewBox="0 0 400 440" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+      </div>
+
+      <div class="result-card-note" id="resultCardNote">
+        <div class="note-flower-accent">✿</div>
+        <div class="note-greeting">Dear <span id="resultName">someone lovely</span>,</div>
+        <div class="note-body" id="resultNote">Thinking of you...</div>
+        <div class="note-sign">With love,<br><span id="resultSenderLine">a friend</span></div>
+      </div>
+
+      <div class="result-foot-actions">
+        <button class="btn-primary-result" onclick="copyLink()" id="copyLinkBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Share this bouquet
+        </button>
+        <button class="btn-small" onclick="resetAll()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px;margin-right:4px;"><path d="M3 12a9 9 0 1 1 9 9 9.75 9.75 0 0 1-6.74-2.74L3 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 16v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Make another
+        </button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

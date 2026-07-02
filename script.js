@@ -1,252 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>petalpost — send a digital bouquet</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap');
-
-:root{
-  --paper:#FAF6EE;
-  --ink:#1E1B16;
-  --poppy:#C9594A;
-  --stem:#7A8B5C;
-  --line:#D8CFC0;
-  --paper-soft:#F1EBDC;
-}
-
-*{box-sizing:border-box; margin:0; padding:0;}
-html,body{height:100%;}
-body{
-  background:var(--paper);
-  color:var(--ink);
-  font-family:'Inter',sans-serif;
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-}
-.app{ min-height:100vh; display:flex; flex-direction:column; }
-button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
-button:focus-visible, a:focus-visible{ outline:2px solid var(--poppy); outline-offset:3px; border-radius:2px; }
-@media (prefers-reduced-motion: reduce){ *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; } }
-
-.display{ font-family:'Fraunces', serif; font-optical-sizing:auto; }
-
-/* ---------- screens ---------- */
-.screen{ display:none; flex:1; flex-direction:column; }
-.screen.active{ display:flex; }
-
-/* ---------- HOME ---------- */
-#home{ align-items:center; justify-content:center; text-align:center; padding:48px 24px 64px; }
-.home-inner{ max-width:560px; }
-.home-logo{ font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:clamp(36px,7vw,52px); margin-bottom:30px; }
-.home-logo span{ color:var(--poppy); }
-.home-sub{ font-size:15.5px; color:#5b5448; line-height:1.6; max-width:380px; margin:0 auto 36px; }
-.home-actions{ display:flex; flex-direction:column; gap:12px; align-items:center; }
-.btn-primary{ background:var(--ink); color:var(--paper); padding:15px 34px; border-radius:100px; font-size:14px; font-weight:600; letter-spacing:.02em; transition:transform .15s ease, background .15s ease; }
-.btn-primary:hover{ background:var(--poppy); transform:translateY(-1px); }
-.btn-primary:disabled{ background:#D8CFC0; color:#a89c87; cursor:not-allowed; transform:none; }
-.btn-ghost{ font-size:13px; font-weight:600; color:var(--ink); text-decoration:none; padding:10px 18px; border:1.5px solid var(--line); border-radius:100px; transition:border-color .15s ease; display:inline-block; }
-.btn-ghost:hover{ border-color:var(--ink); }
-.home-foot{ margin-top:44px; font-size:12px; color:#9b8f7d; }
-
-/* ---------- PICKER ---------- */
-#picker{ padding:40px 24px 150px; max-width:1080px; margin:0 auto; width:100%; }
-.topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:30px; }
-.brand-mini{ font-family:'Fraunces',serif; font-weight:600; font-style:italic; font-size:18px; }
-.mode-toggle{ display:flex; gap:4px; background:var(--paper-soft); border-radius:100px; padding:3px; }
-.mode-toggle button{ font-size:12px; font-weight:600; padding:7px 14px; border-radius:100px; color:#8a8071; }
-.mode-toggle button.active{ background:var(--ink); color:var(--paper); }
-
-.picker-head{ text-align:center; margin-bottom:36px; }
-.picker-head h1{ font-family:'Inter',monospace; font-size:14px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
-.picker-sub{ font-size:13px; color:#8a8071; margin-top:8px; }
-
-.bloom-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:18px 12px; justify-content:center; }
-@media (max-width:880px){ .bloom-grid{ grid-template-columns:repeat(4,1fr); } }
-@media (max-width:460px){ .bloom-grid{ grid-template-columns:repeat(3,1fr); } }
-
-.bloom-card{ position:relative; display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:16px; transition:transform .12s ease, box-shadow .2s ease; }
-.bloom-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(30,27,22,.08); }
-.bloom-art{ position:relative; width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-.bloom-art svg{ width:96%; height:96%; }
-.bloom-name{ font-size:11px; color:#8a8071; margin-top:6px; text-transform:capitalize; letter-spacing:.01em; }
-
-.qty-badge{
-  position:absolute; top:-2px; right:6%;
-  min-width:22px; height:22px; padding:0 5px;
-  background:var(--poppy); color:#fff; border-radius:100px;
-  font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
-  opacity:0; transform:scale(.5); transition:opacity .15s ease, transform .15s ease;
-  box-shadow:0 1px 4px rgba(0,0,0,.15);
-}
-.bloom-card.has-qty .qty-badge{ opacity:1; transform:scale(1); }
-
-.qty-stepper{
-  position:absolute; bottom:-6px; left:50%; transform:translateX(-50%) translateY(4px);
-  display:flex; align-items:center; gap:6px;
-  background:#fff; border:1.5px solid var(--line); border-radius:100px; padding:3px;
-  opacity:0; pointer-events:none; transition:opacity .15s ease, transform .15s ease;
-}
-.bloom-card:hover .qty-stepper, .bloom-card.has-qty .qty-stepper{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
-.qty-stepper button{ width:20px; height:20px; border-radius:50%; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; color:var(--ink); }
-.qty-stepper button:hover{ background:var(--paper-soft); }
-.qty-stepper span{ font-size:11px; font-weight:700; min-width:12px; text-align:center; }
-
-.picker-dock{ position:fixed; left:0; right:0; bottom:0; background:linear-gradient(to top, var(--paper) 72%, transparent); padding:30px 24px 22px; display:flex; justify-content:center; }
-.dock-inner{ width:100%; max-width:520px; display:flex; align-items:center; justify-content:space-between; gap:16px; background:#fff; border:1.5px solid var(--line); border-radius:100px; padding:8px 8px 8px 22px; }
-.dock-tally{ font-size:13px; color:#7a7163; font-weight:500; }
-.dock-tally strong{ color:var(--ink); font-weight:700; }
-.dock-next{ background:var(--ink); color:var(--paper); padding:13px 28px; border-radius:100px; font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:8px; transition:background .15s ease; }
-.dock-next:disabled{ background:#D8CFC0; color:#a89c87; cursor:not-allowed; }
-.dock-next:not(:disabled):hover{ background:var(--poppy); }
-
-/* ---------- ARRANGE ---------- */
-#arrange{ padding:36px 24px 60px; max-width:880px; margin:0 auto; width:100%; }
-.arrange-head{ text-align:center; margin-bottom:18px; }
-.arrange-head h1{ font-family:'Fraunces',serif; font-size:clamp(24px,4vw,30px); font-weight:500; }
-.arrange-head p{ font-size:13.5px; color:#7a7163; margin-top:6px; }
-
-.arrange-controls{ display:flex; justify-content:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
-.btn-small{ font-size:12.5px; font-weight:600; padding:9px 18px; border-radius:100px; border:1.5px solid var(--line); transition:border-color .15s ease, background .15s ease; }
-.btn-small:hover{ border-color:var(--ink); background:#fff; }
-
-.wrap-stage{ position:relative; width:100%; max-width:460px; margin:8px auto 20px; aspect-ratio:400/440; }
-.bouquet-svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-
-.tag-row{ display:grid; gap:12px; max-width:420px; margin:0 auto 28px; }
-.tag-field{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:12px 16px; }
-.tag-field label{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--stem); display:block; margin-bottom:4px; }
-.tag-field input, .tag-field textarea{ width:100%; border:none; font-family:'Fraunces',serif; font-size:16px; background:none; color:var(--ink); resize:none; }
-.tag-field textarea{ font-family:'Inter',sans-serif; font-size:14px; line-height:1.5; height:54px; }
-.tag-field input:focus, .tag-field textarea:focus{ outline:none; }
-.arrange-actions{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-
-/* ---------- RESULT ---------- */
-#result{ align-items:center; justify-content:flex-start; padding:48px 24px 60px; text-align:center; }
-.result-wrap{ max-width:520px; width:100%; margin:0 auto; }
-.result-logo{ font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:28px; margin-bottom:22px; }
-.result-greeting{ font-family:'Inter',monospace; font-size:15px; font-weight:600; color:var(--ink); margin-bottom:28px; }
-
-.result-stage{ position:relative; width:100%; max-width:420px; margin:0 auto 28px; }
-.result-svg{ width:100%; display:block; }
-
-.result-card-note{
-  position:absolute; left:8%; right:8%; bottom:-8%;
-  background:#fff; border-radius:2px;
-  box-shadow:0 14px 30px rgba(30,27,22,.16), 0 2px 6px rgba(30,27,22,.08);
-  padding:22px 24px 20px;
-  transform:rotate(-1.4deg);
-  text-align:left;
-}
-.note-greeting{ font-family:'Inter',monospace; font-size:13px; font-weight:600; color:var(--ink); margin-bottom:12px; word-break:break-word; }
-.note-body{ font-family:'Inter',monospace; font-size:12.5px; color:#3a3528; line-height:1.6; margin-bottom:16px; white-space:pre-wrap; word-break:break-word; }
-.note-sign{ font-family:'Inter',monospace; font-size:12.5px; color:#3a3528; text-align:right; line-height:1.5; }
-
-.result-foot-actions{ display:flex; gap:10px; justify-content:center; margin-top:54px; flex-wrap:wrap; }
-</style>
-</head>
-<body>
-<div class="app">
-
-  <!-- ============ HOME ============ -->
-  <section id="home" class="screen active">
-    <div class="home-inner">
-      <div class="home-logo">petal<span>post</span></div>
-      <p class="home-sub">Pick your blooms, wrap them by hand, and send something that lasts longer than a vase ever could.</p>
-      <div class="home-actions">
-        <button class="btn-primary" onclick="startBuild('color')">Build a bouquet</button>
-        <a class="btn-ghost" href="javascript:void(0)" onclick="startBuild('mono')">Build it in black &amp; white</a>
-      </div>
-      <div class="home-foot">made with care · a petalpost original</div>
-    </div>
-  </section>
-
-  <!-- ============ PICKER ============ -->
-  <section id="picker" class="screen">
-    <div class="topbar">
-      <div class="brand-mini">petal<span style="color:var(--poppy)">post</span></div>
-      <div class="mode-toggle">
-        <button id="modeColorBtn" onclick="setMode('color')">color</button>
-        <button id="modeMonoBtn" onclick="setMode('mono')">mono</button>
-      </div>
-    </div>
-
-    <div class="picker-head">
-      <h1>PICK 6 TO 10 BLOOMS</h1>
-      <p class="picker-sub">Tap a flower to add it — use the + / − to add more of the same kind</p>
-    </div>
-
-    <div class="bloom-grid" id="bloomGrid"></div>
-
-    <div class="picker-dock">
-      <div class="dock-inner">
-        <div class="dock-tally"><strong id="dockCount">0</strong>/10 picked</div>
-        <button class="dock-next" id="nextBtn" disabled onclick="goArrange()">
-          Arrange bouquet
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ ARRANGE ============ -->
-  <section id="arrange" class="screen">
-    <div class="arrange-head">
-      <h1>tie it together</h1>
-      <p>Your bouquet, wrapped. Add who it's for and a few words.</p>
-    </div>
-
-    <div class="arrange-controls">
-      <button class="btn-small" onclick="shuffleArrangement()">↻ Try a new arrangement</button>
-      <button class="btn-small" onclick="shuffleGreenery()">🌿 Change greenery</button>
-    </div>
-
-    <div class="wrap-stage">
-      <svg class="bouquet-svg" id="bouquetSvg" viewBox="0 0 400 440" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
-    </div>
-
-    <div class="tag-row">
-      <div class="tag-field">
-        <label for="toName">For</label>
-        <input id="toName" type="text" placeholder="Their name" maxlength="40">
-      </div>
-      <div class="tag-field">
-        <label for="noteText">A note to tuck in</label>
-        <textarea id="noteText" placeholder="Thinking of you..." maxlength="160"></textarea>
-      </div>
-    </div>
-
-    <div class="arrange-actions">
-      <a class="btn-ghost" href="javascript:void(0)" onclick="goBack('picker')">Rearrange blooms</a>
-      <button class="btn-primary" onclick="goResult()">Wrap &amp; get link</button>
-    </div>
-  </section>
-
-  <!-- ============ RESULT ============ -->
-  <section id="result" class="screen">
-    <div class="result-wrap">
-      <div class="result-logo">petal<span style="color:var(--poppy)">post</span></div>
-      <p class="result-greeting" id="resultGreeting">Hi, I made this bouquet for you!</p>
-
-      <div class="result-stage">
-        <svg class="result-svg" id="resultSvg" viewBox="0 0 400 440" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
-        <div class="result-card-note" id="resultCardNote">
-          <div class="note-greeting">Dear <span id="resultName">someone lovely</span></div>
-          <div class="note-body" id="resultNote">Thinking of you...</div>
-          <div class="note-sign">Sincerely,<br><span id="resultSenderLine">a friend</span></div>
-        </div>
-      </div>
-
-      <div class="result-foot-actions">
-        <button class="btn-small" onclick="copyLink()" id="copyLinkBtn">Copy link</button>
-        <button class="btn-small" onclick="resetAll()">Start a new one</button>
-      </div>
-    </div>
-  </section>
-
-</div>
-
-<script>
 /* =================================================================
    FLOWER DATA — real illustrated artwork, alpha-cut from source art
    ================================================================= */
@@ -456,51 +207,137 @@ function grassBlade(baseX, baseY, len, angle, width, color){
   return `<path d="M${baseLx.toFixed(1)},${baseLy.toFixed(1)} Q${midLx.toFixed(1)},${midLy.toFixed(1)} ${tipX.toFixed(1)},${tipY.toFixed(1)} Q${midRx.toFixed(1)},${midRy.toFixed(1)} ${baseRx.toFixed(1)},${baseRy.toFixed(1)} Z" fill="${color}" opacity="0.95"/>`;
 }
 
-function leafShape(baseX, baseY, len, angle, width, color){
-  // a short, broad-ish pointed leaf (not a thin grass blade) — symmetric
-  // diamond-ish silhouette that reads as foliage tucked between blooms
+function leafShape(baseX, baseY, len, angle, width, colorGrad, isMono, rand){
+  const rot = (angle * 180 / Math.PI) + 90;
+  const size = len * 0.95;
+  const opacity = 0.82 + (rand ? rand() : Math.random()) * 0.15;
+  const flip = (rand ? rand() : Math.random()) > 0.5 ? -1 : 1;
+  const filterAttr = isMono ? 'filter="grayscale(1) contrast(1.05)"' : '';
+  
+  return `<g transform="translate(${baseX.toFixed(1)},${baseY.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${flip},1)" opacity="${opacity.toFixed(2)}">
+    <image href="${GREENERY_IMG}" xlink:href="${GREENERY_IMG}" x="${(-size/2).toFixed(1)}" y="${(-size/2).toFixed(1)}" width="${size.toFixed(1)}" height="${size.toFixed(1)}" preserveAspectRatio="xMidYMid meet" ${filterAttr}/>
+  </g>`;
+}
+
+function drawEucalyptusSprig(baseX, baseY, len, angle, isMono, rand) {
+  const dirX = Math.sin(angle), dirY = -Math.cos(angle);
+  const stemColor = isMono ? '#5C5446' : '#728560';
+  const leafColor = isMono ? '#4A453C' : '#8FA482';
+  const leafColorAlt = isMono ? '#3B3730' : '#728864';
+  
+  let path = `<path d="M${baseX.toFixed(1)},${baseY.toFixed(1)} L${(baseX + dirX*len).toFixed(1)},${(baseY + dirY*len).toFixed(1)}" stroke="${stemColor}" stroke-width="1.8" fill="none" opacity="0.9"/>`;
+  
+  const leafPairs = 4 + Math.floor(rand() * 3);
+  for (let i = 1; i <= leafPairs; i++) {
+    const t = i / (leafPairs + 1);
+    const currX = baseX + dirX * len * t;
+    const currY = baseY + dirY * len * t;
+    const size = (len * 0.18) * (1.2 - t * 0.4);
+    
+    const lAngle = angle - Math.PI / 2 + (rand() - 0.5) * 0.3;
+    const lx = currX + Math.sin(lAngle) * size * 0.5;
+    const ly = currY - Math.cos(lAngle) * size * 0.5;
+    path += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="${size.toFixed(1)}" ry="${(size*0.8).toFixed(1)}" transform="rotate(${(lAngle*180/Math.PI).toFixed(1)} ${lx.toFixed(1)} ${ly.toFixed(1)})" fill="${i % 2 === 0 ? leafColor : leafColorAlt}" opacity="0.95"/>`;
+    
+    const rAngle = angle + Math.PI / 2 + (rand() - 0.5) * 0.3;
+    const rx = currX + Math.sin(rAngle) * size * 0.5;
+    const ry = currY - Math.cos(rAngle) * size * 0.5;
+    path += `<ellipse cx="${rx.toFixed(1)}" cy="${ry.toFixed(1)}" rx="${size.toFixed(1)}" ry="${(size*0.8).toFixed(1)}" transform="rotate(${(rAngle*180/Math.PI).toFixed(1)} ${rx.toFixed(1)} ${ry.toFixed(1)})" fill="${i % 2 === 0 ? leafColorAlt : leafColor}" opacity="0.95"/>`;
+  }
+  
+  return path;
+}
+
+function drawFernFrond(baseX, baseY, len, angle, isMono, rand) {
   const dirX = Math.sin(angle), dirY = -Math.cos(angle);
   const perpX = dirY, perpY = -dirX;
-  const tipX = baseX + dirX*len, tipY = baseY + dirY*len;
-  const bellyX = baseX + dirX*len*0.42, bellyY = baseY + dirY*len*0.42;
-  const Lx = bellyX + perpX*width, Ly = bellyY + perpY*width;
-  const Rx = bellyX - perpX*width, Ry = bellyY - perpY*width;
-  return `<path d="M${baseX.toFixed(1)},${baseY.toFixed(1)} Q${Lx.toFixed(1)},${Ly.toFixed(1)} ${tipX.toFixed(1)},${tipY.toFixed(1)} Q${Rx.toFixed(1)},${Ry.toFixed(1)} ${baseX.toFixed(1)},${baseY.toFixed(1)} Z" fill="${color}" opacity="0.95"/>`;
+  const stemColor = isMono ? '#5C5446' : '#5C7449';
+  const leafColor = isMono ? '#3B3730' : '#6A8754';
+  
+  let path = `<path d="M${baseX.toFixed(1)},${baseY.toFixed(1)} L${(baseX + dirX*len).toFixed(1)},${(baseY + dirY*len).toFixed(1)}" stroke="${stemColor}" stroke-width="1.5" fill="none" opacity="0.9"/>`;
+  
+  const leaflets = 7 + Math.floor(rand() * 5);
+  for (let i = 1; i <= leaflets; i++) {
+    const t = i / (leaflets + 1);
+    const currX = baseX + dirX * len * t;
+    const currY = baseY + dirY * len * t;
+    const width = (len * 0.15) * (1 - t * 0.6);
+    
+    const lTipX = currX + perpX * width + dirX * 6;
+    const lTipY = currY + perpY * width + dirY * 6;
+    path += `<path d="M${currX.toFixed(1)},${currY.toFixed(1)} Q${(currX + perpX*width*0.5).toFixed(1)},${(currY + perpY*width*0.5 - 3).toFixed(1)} ${lTipX.toFixed(1)},${lTipY.toFixed(1)} Q${(currX + perpX*width*0.5 + 3).toFixed(1)},${(currY + perpY*width*0.5).toFixed(1)} ${currX.toFixed(1)},${currY.toFixed(1)}" fill="${leafColor}" opacity="0.95"/>`;
+    
+    const rTipX = currX - perpX * width + dirX * 6;
+    const rTipY = currY - perpY * width + dirY * 6;
+    path += `<path d="M${currX.toFixed(1)},${currY.toFixed(1)} Q${(currX - perpX*width*0.5).toFixed(1)},${(currY - perpY*width*0.5 - 3).toFixed(1)} ${rTipX.toFixed(1)},${rTipY.toFixed(1)} Q${(currX - perpX*width*0.5 - 3).toFixed(1)},${(currY - perpY*width*0.5).toFixed(1)} ${currX.toFixed(1)},${currY.toFixed(1)}" fill="${leafColor}" opacity="0.95"/>`;
+  }
+  
+  return path;
+}
+
+function drawRuscusSprig(baseX, baseY, len, angle, isMono, rand) {
+  const dirX = Math.sin(angle), dirY = -Math.cos(angle);
+  const perpX = dirY, perpY = -dirX;
+  const stemColor = isMono ? '#5C5446' : '#4C5D3D';
+  const leafColor = isMono ? '#36322A' : '#576D46';
+  
+  let path = `<path d="M${baseX.toFixed(1)},${baseY.toFixed(1)} L${(baseX + dirX*len).toFixed(1)},${(baseY + dirY*len).toFixed(1)}" stroke="${stemColor}" stroke-width="1.6" fill="none" opacity="0.9"/>`;
+  
+  const leaves = 5 + Math.floor(rand() * 3);
+  for (let i = 1; i <= leaves; i++) {
+    const t = i / (leaves + 1);
+    const currX = baseX + dirX * len * t;
+    const currY = baseY + dirY * len * t;
+    
+    const leafLen = len * 0.28 * (1.1 - t * 0.3);
+    const leafWidth = leafLen * 0.35;
+    
+    const side = i % 2 === 0 ? 1 : -1;
+    const leafAngle = angle + (side * Math.PI * 0.2) + (rand() - 0.5) * 0.15;
+    
+    const lDirX = Math.sin(leafAngle), lDirY = -Math.cos(leafAngle);
+    const lPerpX = lDirY, lPerpY = -lDirX;
+    
+    const tipX = currX + lDirX * leafLen;
+    const tipY = currY + lDirY * leafLen;
+    
+    const bellyX = currX + lDirX * leafLen * 0.45;
+    const bellyY = currY + lDirY * leafLen * 0.45;
+    
+    const bx1 = bellyX + lPerpX * leafWidth;
+    const by1 = bellyY + lPerpY * leafWidth;
+    const bx2 = bellyX - lPerpX * leafWidth;
+    const by2 = bellyY - lPerpY * leafWidth;
+    
+    path += `<path d="M${currX.toFixed(1)},${currY.toFixed(1)} Q${bx1.toFixed(1)},${by1.toFixed(1)} ${tipX.toFixed(1)},${tipY.toFixed(1)} Q${bx2.toFixed(1)},${by2.toFixed(1)} ${currX.toFixed(1)},${currY.toFixed(1)} Z" fill="${leafColor}" opacity="0.95"/>`;
+    path += `<path d="M${currX.toFixed(1)},${currY.toFixed(1)} Q${bellyX.toFixed(1)},${bellyY.toFixed(1)} ${tipX.toFixed(1)},${tipY.toFixed(1)}" stroke="${isMono ? '#6E6556' : '#7D9E67'}" stroke-width="0.8" fill="none" opacity="0.5"/>`;
+  }
+  return path;
 }
 
 function buildGreenery(rand, maxR, isMono){
   let out = '';
   const colorA = isMono ? '#4A453C' : '#7A8F5E';  // lighter sage
   const colorB = isMono ? '#2B2820' : '#4F6B3C';  // deeper forest
-  // flower images are 104px wide (52px radius) at full scale, positioned
-  // with their centers out to ~maxR from the cluster center — so the
-  // outermost visual edge of the flower mass sits around maxR + ~50px
   const flowerVisualRadius = maxR + 50;
 
-  // Short pointed leaves peeking from just beyond the flowers' outer edge,
-  // bases tucked right at that edge so they read as foliage behind the
-  // outermost blooms rather than a tall separate backdrop.
   const leafCount = greeneryStyle === 0 ? 11 : (greeneryStyle === 1 ? 8 : 15);
   for(let i=0;i<leafCount;i++){
     const a = (i / leafCount) * Math.PI * 2 + rand()*0.35;
     const baseR = flowerVisualRadius * (0.72 + rand()*0.12);
     const baseX = Math.cos(a) * baseR;
     const baseY = Math.sin(a) * baseR;
-    // leafShape's angle convention is 0=up; convert from standard math
-    // angle `a` (0=right) to that convention so leaves point radially outward
     const outwardAngle = (Math.PI/2 - a) + (rand()-0.5)*0.35;
     const len = flowerVisualRadius * (0.45 + rand()*0.3);
     const width = len * (0.2 + rand()*0.08);
     const useDark = i % 2 === 0;
-    out += leafShape(baseX, baseY, len, outwardAngle, width, useDark ? colorB : colorA);
+    out += leafShape(baseX, baseY, len, outwardAngle, width, useDark ? colorB : colorA, isMono, rand);
   }
 
-  // a handful of short blades peeking out near the base/sides only —
-  // an accent, not the dominant shape
   const bladeCount = greeneryStyle === 1 ? 7 : (greeneryStyle === 2 ? 9 : 5);
   for(let i=0;i<bladeCount;i++){
     const t = bladeCount<=1 ? 0.5 : i/(bladeCount-1);
-    const angle = -Math.PI*0.22 + t*Math.PI*0.44 + (rand()-0.5)*0.5 + Math.PI; // mostly pointing down/out from base
+    const angle = -Math.PI*0.22 + t*Math.PI*0.44 + (rand()-0.5)*0.5 + Math.PI;
     const len = flowerVisualRadius * (0.5 + rand()*0.4);
     const baseX = (t-0.5) * flowerVisualRadius*0.9 + (rand()-0.5)*8;
     const baseY = flowerVisualRadius*0.62 + rand()*10;
@@ -509,20 +346,125 @@ function buildGreenery(rand, maxR, isMono){
     out += grassBlade(baseX, baseY, len, angle, width, useDark ? colorB : colorA);
   }
 
-  // a couple of real eucalyptus sprig images mixed in for texture variety
-  const sprigCount = greeneryStyle === 1 ? 3 : 2;
+  const sprigCount = greeneryStyle === 1 ? 5 : 4;
   for(let i=0;i<sprigCount;i++){
     const t = sprigCount<=1 ? 0.5 : i/(sprigCount-1);
     const angle = -Math.PI*0.65 + t*Math.PI*1.3 + (rand()-0.5)*0.15;
     const reach = flowerVisualRadius * (0.75 + rand()*0.2);
     const x = Math.sin(angle) * reach;
     const y = -Math.cos(angle) * reach * 0.1 - reach * 0.12;
-    const size = 46 + rand()*18;
+    const size = 68 + rand()*24;
     const rot = (angle*180/Math.PI) + (rand()-0.5)*20;
     const flip = rand() > 0.5 ? -1 : 1;
-    out += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${flip},1)" opacity="${(0.8+rand()*0.13).toFixed(2)}">
+    out += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${flip},1)" opacity="${(0.85+rand()*0.12).toFixed(2)}">
       <image href="${GREENERY_IMG}" xlink:href="${GREENERY_IMG}" x="${(-size/2).toFixed(1)}" y="${(-size/2).toFixed(1)}" width="${size.toFixed(1)}" height="${size.toFixed(1)}" preserveAspectRatio="xMidYMid meet" ${isMono?'filter="grayscale(1) contrast(1.05)"':''}/>
     </g>`;
+  }
+  return out;
+}
+
+function buildStems(CX, CY, positions, stems, isMono, rand) {
+  let out = '';
+  // Warm woody/green stems
+  const stemColor = isMono ? '#5C5446' : '#657A4E';
+  const tieX = CX;
+  const tieY = CY + 140;
+  
+  positions.forEach((pos) => {
+    const startX = CX + pos.x;
+    const startY = CY + pos.y;
+    
+    // Smooth bezier curve gathering at the ribbon tie point
+    const cp1x = startX - pos.x * 0.15;
+    const cp1y = startY + (tieY - startY) * 0.4;
+    
+    // Stems extend past the tie point and splay out naturally
+    const endX = tieX + (pos.x * 0.4) + (rand() - 0.5) * 16;
+    const endY = CY + 215;
+    
+    out += `<path d="M${startX.toFixed(1)},${startY.toFixed(1)} Q${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${tieX},${tieY} T${endX.toFixed(1)},${endY.toFixed(1)}" stroke="${stemColor}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.85" />`;
+  });
+  return out;
+}
+
+function buildPaperWrapBack(CX, CY, maxR, isMono, rand) {
+  const paperColor1 = isMono ? '#E8E5DD' : '#F7F0E6';
+  const paperColor2 = isMono ? '#D6D1C4' : '#EADECF';
+  
+  const w = Math.max(150, maxR + 70);
+  
+  // Outer paper folds extending upwards and outwards
+  return `
+    <!-- Wrap Back Left -->
+    <path d="M${CX},${CY+140} L${CX - w * 1.05},${CY - w * 0.25} Q${CX - w * 0.7},${CY - w * 0.85} ${CX - w * 0.2},${CY - w * 0.95} Z" fill="${paperColor1}" opacity="0.9" />
+    <!-- Wrap Back Right -->
+    <path d="M${CX},${CY+140} L${CX + w * 1.05},${CY - w * 0.25} Q${CX + w * 0.7},${CY - w * 0.85} ${CX + w * 0.2},${CY - w * 0.95} Z" fill="${paperColor1}" opacity="0.9" />
+    <!-- Wrap Back Middle Folds -->
+    <path d="M${CX},${CY+140} L${CX - w * 0.35},${CY - w * 1.05} Q${CX},${CY - w * 1.2} ${CX + w * 0.35},${CY - w * 1.05} Z" fill="${paperColor2}" opacity="0.95" />
+  `;
+}
+
+function buildPaperWrapFront(CX, CY, maxR, isMono, rand) {
+  const paperColorFront = isMono ? '#E8E5DD' : '#F6ECE0';
+  
+  const w = Math.max(150, maxR + 70);
+  
+  // Cone wrap folded in the front, wrapping the stems like a florists cuff
+  return `
+    <!-- Front Cone Cuff -->
+    <path d="M${CX - w * 0.15},${CY + 140} L${CX - w * 0.55},${CY + 50} C${CX - w * 0.1},${CY + 80} ${CX + w * 0.1},${CY + 80} ${CX + w * 0.55},${CY + 50} L${CX + w * 0.15},${CY + 140} Z" fill="${paperColorFront}" stroke="${isMono ? '#BDB7AA' : '#D1C4B2'}" stroke-width="1.5" opacity="0.98" />
+    <!-- Front Cross Flap Left -->
+    <path d="M${CX - w * 0.5},${CY + 70} Q${CX},${CY + 100} ${CX + w * 0.4},${CY + 140} L${CX - w * 0.15},${CY + 140} Z" fill="${paperColorFront}" opacity="0.96" />
+    <!-- Front Cross Flap Right -->
+    <path d="M${CX + w * 0.5},${CY + 70} Q${CX},${CY + 100} ${CX - w * 0.4},${CY + 140} L${CX + w * 0.15},${CY + 140} Z" fill="${paperColorFront}" opacity="0.96" />
+  `;
+}
+
+function buildRibbon(CX, CY, isMono, rand) {
+  const ribbonColor = isMono ? '#1E1B16' : '#C9594A'; // var(--poppy) or var(--ink)
+  const tieX = CX;
+  const tieY = CY + 140;
+  
+  return `
+    <!-- Left Loop -->
+    <path d="M${tieX},${tieY} C${tieX - 40},${tieY - 20} ${tieX - 40},${tieY + 10} ${tieX},${tieY}" fill="${ribbonColor}" opacity="0.95" />
+    <!-- Right Loop -->
+    <path d="M${tieX},${tieY} C${tieX + 40},${tieY - 20} ${tieX + 40},${tieY + 10} ${tieX},${tieY}" fill="${ribbonColor}" opacity="0.95" />
+    <!-- Left Tail -->
+    <path d="M${tieX - 4},${tieY} C${tieX - 20},${tieY + 30} ${tieX - 12},${tieY + 50} ${tieX - 20},${tieY + 70} C${tieX - 28},${tieY + 50} ${tieX - 24},${tieY + 30} ${tieX - 4},${tieY}" fill="${ribbonColor}" opacity="0.9" />
+    <!-- Right Tail -->
+    <path d="M${tieX + 4},${tieY} C${tieX + 20},${tieY + 30} ${tieX + 12},${tieY + 50} ${tieX + 20},${tieY + 70} C${tieX + 28},${tieY + 50} ${tieX + 24},${tieY + 30} ${tieX + 4},${tieY}" fill="${ribbonColor}" opacity="0.9" />
+    <!-- Center Knot -->
+    <rect x="${tieX - 6}" y="${tieY - 6}" width="12" height="12" rx="3" fill="${ribbonColor}" />
+  `;
+}
+
+function buildFillers(CX, CY, positions, isMono, rand) {
+  let out = '';
+  const branchColor = isMono ? '#5C5446' : '#8A9B6E';
+  const budColor = isMono ? '#FFFFFF' : '#FFFDF0';
+  
+  // Generate filler clusters around 7 points
+  const clusterCount = 7;
+  for (let i = 0; i < clusterCount; i++) {
+    const angle = rand() * Math.PI * 2;
+    const r = (rand() * 0.6 + 0.3) * Math.max(...positions.map(p => p.r));
+    const fx = CX + Math.cos(angle) * r;
+    const fy = CY + Math.sin(angle) * r;
+    
+    // Draw thin branch spray
+    out += `<path d="M${CX},${CY+60} Q${(CX+fx)/2},${(CY+fy)/2} ${fx},${fy}" stroke="${branchColor}" stroke-width="1.0" fill="none" opacity="0.55" />`;
+    
+    // Little branchlets
+    for (let j = 0; j < 4; j++) {
+      const bx = fx + (rand() - 0.5) * 32;
+      const by = fy + (rand() - 0.5) * 32;
+      out += `<line x1="${fx}" y1="${fy}" x2="${bx}" y2="${by}" stroke="${branchColor}" stroke-width="0.7" opacity="0.55" />`;
+      
+      // Clusters of tiny white buds
+      out += `<circle cx="${bx}" cy="${by}" r="2.2" fill="${budColor}" stroke="${isMono ? '#9B9080' : '#E8DFC9'}" stroke-width="0.4" />`;
+      out += `<circle cx="${bx + (rand()-0.5)*4}" cy="${by + (rand()-0.5)*4}" r="1.7" fill="${budColor}" opacity="0.85" />`;
+    }
   }
   return out;
 }
@@ -536,22 +478,88 @@ function buildBouquetSVG(targetId){
   const rand = seededRand(arrangeSeed * 97 + n * 13 + 7);
   const isMono = mode === 'mono';
 
-  // canvas center for the cluster — now that greenery is integrated into
-  // the bouquet itself rather than a tall fan behind it, the cluster sits
-  // closer to true center with a little extra room below for stem ends
-  const CX = 200, CY = 250;
+  // raised center for cluster to fit stems and wrapper at the bottom
+  const CX = 200, CY = 190;
 
   const positions = layoutPositions(n, rand);
   const maxR = Math.max(...positions.map(p => p.r));
 
   // soft radial glow behind the whole bouquet, like warm light catching it
   const glowR = maxR * 3.2;
-  const glow = isMono ? '' : `<defs><radialGradient id="bouquetGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#F3E7B8" stop-opacity="0.65"/>
-      <stop offset="55%" stop-color="#F3E7B8" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="#F3E7B8" stop-opacity="0"/>
-    </radialGradient></defs>
-    <circle cx="${CX}" cy="${CY}" r="${glowR.toFixed(1)}" fill="url(#bouquetGlow)"/>`;
+  const defs = `<defs>
+      ${isMono ? '' : `
+      <radialGradient id="bouquetGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FDF3E7" stop-opacity="0.75"/>
+        <stop offset="60%" stop-color="#FDF3E7" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#FDF3E7" stop-opacity="0"/>
+      </radialGradient>
+      `}
+      <!-- Leaf Gradients (Sage) -->
+      <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#A7BA9B" />
+        <stop offset="100%" stop-color="#5B7347" />
+      </linearGradient>
+      <linearGradient id="leafGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#546E3F" />
+        <stop offset="100%" stop-color="#2D3F22" />
+      </linearGradient>
+      <linearGradient id="leafGradMono" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#9B968B" />
+        <stop offset="100%" stop-color="#4B463C" />
+      </linearGradient>
+      <linearGradient id="leafGradDarkMono" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#4B463C" />
+        <stop offset="100%" stop-color="#2A2620" />
+      </linearGradient>
+
+      <!-- Eucalyptus Gradients -->
+      <linearGradient id="eucaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#A2B795" />
+        <stop offset="100%" stop-color="#7B926E" />
+      </linearGradient>
+      <linearGradient id="eucaGradAlt" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8FA482" />
+        <stop offset="100%" stop-color="#697D5B" />
+      </linearGradient>
+      <linearGradient id="eucaGradMono" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#99A690" />
+        <stop offset="100%" stop-color="#6E7868" />
+      </linearGradient>
+      <linearGradient id="eucaGradAltMono" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8A9483" />
+        <stop offset="100%" stop-color="#5E6759" />
+      </linearGradient>
+
+      <!-- Fern Gradients -->
+      <linearGradient id="fernGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#465A36" />
+        <stop offset="100%" stop-color="#6D8E55" />
+      </linearGradient>
+      <linearGradient id="fernGradMono" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stop-color="#444E3D" />
+        <stop offset="100%" stop-color="#67735D" />
+      </linearGradient>
+
+      <!-- Ruscus Gradients (Glossy) -->
+      <linearGradient id="ruscusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#617F4D" />
+        <stop offset="50%" stop-color="#486137" />
+        <stop offset="100%" stop-color="#2D3F22" />
+      </linearGradient>
+      <linearGradient id="ruscusGradMono" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#5C6853" />
+        <stop offset="50%" stop-color="#444E3D" />
+        <stop offset="100%" stop-color="#2A2F25" />
+      </linearGradient>
+    </defs>`;
+
+  const glow = isMono ? '' : `<circle cx="${CX}" cy="${CY}" r="${glowR.toFixed(1)}" fill="url(#bouquetGlow)"/>`;
+
+  // Draw wrap back
+  const wrapBack = buildPaperWrapBack(CX, CY, maxR, isMono, rand);
+
+  // Draw stems
+  const stemPaths = buildStems(CX, CY, positions, stems, isMono, rand);
 
   // depth order: place outer/back stems first, inner/front stems last,
   // so the visual center of the bouquet reads as closest to the viewer
@@ -560,6 +568,9 @@ function buildBouquetSVG(targetId){
     .sort((a, b) => (b.pos.r - a.pos.r) || (a.pos.y - b.pos.y));
 
   const greenery = buildGreenery(rand, maxR, isMono);
+  const fillers = buildFillers(CX, CY, positions, isMono, rand);
+  const wrapFront = buildPaperWrapFront(CX, CY, maxR, isMono, rand);
+  const ribbon = buildRibbon(CX, CY, isMono, rand);
 
   let heads = '';
   drawOrder.forEach(({ id, pos }) => {
@@ -572,11 +583,9 @@ function buildBouquetSVG(targetId){
     </g>`;
   });
 
-  // greenery anchored at the same cluster center so it integrates correctly
-  // relative to wherever the (re-centered) flower mass actually landed
   const greeneryWrapped = `<g transform="translate(${CX},${CY})">${greenery}</g>`;
 
-  svg.innerHTML = `${glow}${greeneryWrapped}${heads}`;
+  svg.innerHTML = `${defs}${glow}${wrapBack}${greeneryWrapped}${stemPaths}${wrapFront}${fillers}${heads}${ribbon}`;
 }
 
 /* =================================================================
@@ -588,14 +597,26 @@ function goResult(){
   document.getElementById('resultName').textContent = name || 'someone lovely';
   document.getElementById('resultNote').textContent = note || 'Thinking of you...';
   document.getElementById('resultSenderLine').textContent = 'a friend';
+  // personalise the greeting
+  const greeting = name ? `A bouquet for ${name}` : 'A bouquet, just for you';
+  document.getElementById('resultGreeting').textContent = greeting;
   const code = Math.random().toString(36).slice(2,8);
   resultShareCode = code;
   buildBouquetSVG('resultSvg');
   showScreen('result');
+  // re-trigger entrance animations by cloning classes
+  const stage = document.querySelector('.result-stage');
+  const card = document.querySelector('.result-card-note');
+  [stage, card].forEach(el => {
+    if(!el) return;
+    el.style.animation = 'none';
+    el.offsetHeight; // trigger reflow
+    el.style.animation = '';
+  });
 }
 
 function copyLink(){
-  const url = `https://petalpost.app/b/${resultShareCode}`;
+  const url = `https://digiflowers.app/b/${resultShareCode}`;
   navigator.clipboard?.writeText(url).catch(()=>{});
   const btn = document.getElementById('copyLinkBtn');
   const old = btn.textContent;
@@ -613,6 +634,10 @@ function resetAll(){
 
 updatePickerUI();
 setMode('color');
-</script>
-</body>
-</html>
+
+// Render rose icon above home logo on load
+const homeFlowerEl = document.getElementById('homeFlower');
+if (homeFlowerEl) {
+  const homeRose = FLOWERS.find(f => f.id === 'rose-pink') || FLOWERS[0];
+  homeFlowerEl.innerHTML = `<svg viewBox="0 0 120 120" style="width:80px; height:80px; margin:0 auto 10px; display:block;">${flowerSVG(homeRose, false)}</svg>`;
+}
